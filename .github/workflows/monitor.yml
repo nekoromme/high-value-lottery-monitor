@@ -1,0 +1,131 @@
+name: RICOH lottery monitor
+
+on:
+  schedule:
+    # UTCの毎時17分 = 日本時間でも毎時17分。正時のActions混雑を避ける。
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "実行方法（通常はauto）"
+        required: true
+        default: auto
+        type: choice
+        options:
+          - auto
+          - dry-run
+          - baseline
+          - run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: high-value-lottery-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONUNBUFFERED: "1"
+      RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'auto' }}
+
+    steps:
+      - name: プログラムを取得
+        uses: actions/checkout@v4
+
+      - name: Pythonを準備
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 必要な部品をインストール
+        run: python -m pip install --upgrade pip ".[test]"
+
+      - name: 自動テスト
+        run: python -m pytest
+
+      - name: 状態保存ブランチを確認
+        id: state-branch
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin monitor-state >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 既存の状態を取得
+        if: steps.state-branch.outputs.exists == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: monitor-state
+          path: .monitor-state
+          fetch-depth: 1
+
+      - name: 状態保存場所の元ファイルを取得
+        if: steps.state-branch.outputs.exists == 'false'
+        uses: actions/checkout@v4
+        with:
+          path: .monitor-state
+          fetch-depth: 1
+
+      - name: 状態保存ブランチを初回作成
+        if: steps.state-branch.outputs.exists == 'false'
+        working-directory: .monitor-state
+        shell: bash
+        run: |
+          git checkout --orphan monitor-state
+          git rm -rf .
+          mkdir -p state
+          cp "$GITHUB_WORKSPACE/state/state.json" state/state.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/state.json
+          git commit -m "Initialize monitor state"
+          git push origin monitor-state
+
+      - name: RICOH公式オンラインストアを監視
+        id: monitor
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          MONITOR_USER_AGENT_CONTACT: ${{ vars.MONITOR_USER_AGENT_CONTACT }}
+          STATE_FILE: ${{ github.workspace }}/.monitor-state/state/state.json
+          LOG_DIR: ${{ github.workspace }}/logs
+        run: |
+          set -o pipefail
+          lottery-monitor --mode "$RUN_MODE" | tee monitor-summary.json
+
+      - name: 状態を保存
+        if: always()
+        working-directory: .monitor-state
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/state.json
+          if git diff --cached --quiet; then
+            echo "状態に変更はありません"
+            exit 0
+          fi
+          git commit -m "Update monitor state ($GITHUB_RUN_ID)"
+          git pull --rebase origin monitor-state
+          git push origin monitor-state
+
+      - name: 診断ログを保存
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ricoh-monitor-log-${{ github.run_id }}
+          path: |
+            logs/
+            monitor-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+
