@@ -1,8 +1,7 @@
-name: Repository inactivity guard
+name: Repository inactivity fallback
 
 on:
   schedule:
-    # 毎日 日本時間 09:37（UTC 00:37）。正時付近の混雑を避ける。
     - cron: "37 0 * * *"
   workflow_dispatch:
 
@@ -10,72 +9,38 @@ permissions:
   contents: read
 
 jobs:
-  guard:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
-      - name: 公開リポジトリの無活動停止を予防・復旧
+      - name: 55日以上無活動の公開リポジトリをDiscord警告
         shell: python
         env:
-          # 他リポジトリを書き換えたりActionsを再有効化するためのFine-grained PAT。
-          # 未設定時は安全に診断だけ行い、必要な権限をDiscordへ通知する。
-          GUARD_TOKEN: ${{ secrets.REPOSITORY_GUARD_TOKEN }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          import base64
           import json
           import os
-          import sys
-          import urllib.error
           import urllib.request
           from datetime import datetime, timezone
 
           owner = os.environ["OWNER"]
-          token = os.environ.get("GUARD_TOKEN", "").strip()
           webhook = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
           now = datetime.now(timezone.utc)
 
-          def request(url, method="GET", data=None):
-              headers = {
-                  "Accept": "application/vnd.github+json",
-                  "X-GitHub-Api-Version": "2022-11-28",
-                  "User-Agent": "repository-inactivity-guard",
-              }
-              if token:
-                  headers["Authorization"] = f"Bearer {token}"
-              body = None if data is None else json.dumps(data).encode("utf-8")
-              if body is not None:
-                  headers["Content-Type"] = "application/json"
-              req = urllib.request.Request(url, data=body, headers=headers, method=method)
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  raw = response.read()
-                  return response.status, json.loads(raw) if raw else None
-
-          def notify(text):
-              print(text)
-              if not webhook:
-                  return
-              payload = json.dumps({"content": text}, ensure_ascii=False).encode("utf-8")
-              req = urllib.request.Request(webhook, data=payload,
-                  headers={"Content-Type": "application/json", "User-Agent": "repository-inactivity-guard"},
-                  method="POST")
-              with urllib.request.urlopen(req, timeout=20) as response:
-                  print(f"Discord通知: HTTP {response.status}")
-
-          # 公開リポジトリは認証なしでも列挙できるので、トークン未設定でも診断は可能。
           repos = []
           page = 1
           while True:
-              status, batch = request(
-                  f"https://api.github.com/users/{owner}/repos?type=owner&sort=full_name&per_page=100&page={page}"
-              )
+              url = f"https://api.github.com/users/{owner}/repos?type=owner&sort=full_name&per_page=100&page={page}"
+              req = urllib.request.Request(url, headers={"User-Agent": "repository-inactivity-fallback"})
+              with urllib.request.urlopen(req, timeout=20) as response:
+                  batch = json.load(response)
               repos.extend(batch)
               if len(batch) < 100:
                   break
               page += 1
 
-          actions_needed = []
+          warnings = []
           for repo in repos:
               if repo.get("archived") or repo.get("fork") or repo.get("private"):
                   continue
@@ -85,71 +50,30 @@ jobs:
               last_push = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
               days = (now - last_push).days
               print(f"{repo['full_name']}: 最終push {days}日前")
-              if days >= 50:
-                  actions_needed.append((repo, days))
+              if days >= 55:
+                  warnings.append((days, repo["full_name"], repo["html_url"]))
 
-          if not actions_needed:
-              print("50日以上無活動の公開リポジトリはありません")
-              sys.exit(0)
+          if not warnings:
+              print("55日以上無活動の公開リポジトリはありません")
+              raise SystemExit(0)
 
-          if not token:
-              notify(
-                  "⚠️ GitHub無活動ガード: 50日以上無活動のリポジトリを検出しましたが、"
-                  "REPOSITORY_GUARD_TOKEN が未設定なので自動予防・復旧できません。\n"
-                  "Fine-grained PATに対象リポジトリの Contents: Read and write と Actions: Read and write を付与し、"
-                  "このリポジトリのActions secret `REPOSITORY_GUARD_TOKEN` に登録してください。"
+          lines = [
+              "🚨 GitHub無活動ガード: 55日以上無活動のリポジトリがあります。",
+              "50日目の自動keep-aliveが効いていない可能性があります。60日停止前に確認してください。",
+              "",
+          ]
+          for days, name, url in sorted(warnings, reverse=True):
+              lines.append(f"• {name}: {days}日前\n  {url}")
+
+          text = "\n".join(lines)
+          print(text)
+          if webhook:
+              payload = json.dumps({"content": text}, ensure_ascii=False).encode("utf-8")
+              req = urllib.request.Request(
+                  webhook,
+                  data=payload,
+                  headers={"Content-Type": "application/json", "User-Agent": "repository-inactivity-fallback"},
+                  method="POST",
               )
-              sys.exit(1)
-
-          results = []
-          failures = []
-
-          for repo, days in actions_needed:
-              full = repo["full_name"]
-              default_branch = repo.get("default_branch") or "main"
-              try:
-                  # 50日: .github/.repository-keepalive の内容を更新して実コミットを作る。
-                  path = ".github/.repository-keepalive"
-                  contents_url = f"https://api.github.com/repos/{full}/contents/{path}"
-                  sha = None
-                  try:
-                      _, current = request(contents_url)
-                      sha = current.get("sha")
-                  except urllib.error.HTTPError as e:
-                      if e.code != 404:
-                          raise
-
-                  stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ") + "\n"
-                  body = {
-                      "message": "chore: keep scheduled workflows active",
-                      "content": base64.b64encode(stamp.encode()).decode(),
-                      "branch": default_branch,
-                  }
-                  if sha:
-                      body["sha"] = sha
-                  request(contents_url, "PUT", body)
-                  results.append(f"✅ {full}: {days}日無活動 → keep-aliveコミット作成")
-
-                  # 念のため、既に無活動停止になっているworkflowがないか全件確認して復旧する。
-                  _, workflows = request(f"https://api.github.com/repos/{full}/actions/workflows?per_page=100")
-                  for wf in workflows.get("workflows", []):
-                      if wf.get("state") == "disabled_inactivity":
-                          wf_id = wf["id"]
-                          request(f"https://api.github.com/repos/{full}/actions/workflows/{wf_id}/enable", "PUT")
-                          results.append(f"♻️ {full}: {wf.get('name', wf_id)} を自動再有効化")
-
-              except Exception as exc:
-                  failures.append(f"❌ {full}: {type(exc).__name__}: {exc}")
-
-          # 55日相当の再確認は毎日の実行で自然に行われる。
-          # 50日の処置に失敗して55日以上になった場合は明示的に強い警告を出す。
-          for repo, days in actions_needed:
-              if days >= 55 and any(repo["full_name"] in f for f in failures):
-                  failures.append(f"🚨 {repo['full_name']}: {days}日無活動。60日停止まで猶予が少ないため手動確認が必要")
-
-          if results or failures:
-              text = "🛡️ GitHub無活動ガード 実行結果\n" + "\n".join(results + failures)
-              notify(text)
-
-          if failures:
-              sys.exit(1)
+              with urllib.request.urlopen(req, timeout=20) as response:
+                  print(f"Discord通知: HTTP {response.status}")
