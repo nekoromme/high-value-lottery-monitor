@@ -3,7 +3,7 @@
 処理順:
 1. RICOH公式から受付中の応募フォームと表示価格を取得する。
 2. JANコードで買取ルデヤの新品買取価格を取得する。
-3. RICOH購入価格の方が高い商品は除外する。
+3. 購入価格に対する粗利益率が5%未満の商品は除外する（赤字も含む）。
 4. 対象だけをブラウザで入力し、送信ボタンは絶対に押さずに停止する。
 
 応募者情報はPC内の ``pc_config.json`` にだけ保存する。ログへは書かない。
@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 
 JST = ZoneInfo("Asia/Tokyo")
+MIN_PROFIT_RATE_PERCENT = 5
 PREFECTURES = (
     "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
     "群馬県", "栃木県", "茨城県", "埼玉県", "千葉県", "東京都", "神奈川県",
@@ -103,6 +104,7 @@ class PriceDecision:
     purchase_price_yen: int | None
     buyback_price_yen: int | None
     gross_difference_yen: int | None
+    profit_rate_percent: float | None
     should_fill: bool
     reason: str
     form_url: str | None
@@ -237,10 +239,10 @@ def decide_price(
     purchase_price_override: int | None = None,
     quote_error: str | None = None,
 ) -> PriceDecision:
-    """指定どおり『購入価格 > 買取価格』の時だけ赤字除外する。
+    """購入価格に対する粗利益率が5%以上の時だけ入力対象にする。
 
     価格不明・取得失敗・JAN未登録は安全側に倒し、自動入力しない。
-    購入価格と買取価格が同額なら、ユーザー指定に合わせて入力対象とする。
+    判定は丸め誤差を避けるため整数のまま比較し、5.00%ちょうどは対象にする。
     """
 
     purchase_price = purchase_price_override or case.price_yen
@@ -249,32 +251,61 @@ def decide_price(
 
     if purchase_price is None:
         return PriceDecision(
-            case.model_name, None, buyback_price, None, False,
-            "RICOH購入価格を取得できないため要確認", case.form_url, quote_url,
+            model_name=case.model_name,
+            purchase_price_yen=None,
+            buyback_price_yen=buyback_price,
+            gross_difference_yen=None,
+            profit_rate_percent=None,
+            should_fill=False,
+            reason="RICOH購入価格を取得できないため要確認",
+            form_url=case.form_url,
+            quote_url=quote_url,
         )
     if quote is None:
         detail = quote_error or "買取価格を取得できないため要確認"
         return PriceDecision(
-            case.model_name, purchase_price, None, None, False,
-            detail, case.form_url, None,
+            model_name=case.model_name,
+            purchase_price_yen=purchase_price,
+            buyback_price_yen=None,
+            gross_difference_yen=None,
+            profit_rate_percent=None,
+            should_fill=False,
+            reason=detail,
+            form_url=case.form_url,
+            quote_url=None,
         )
 
     difference = buyback_price - purchase_price
-    if purchase_price > buyback_price:
+    profit_rate_percent = difference / purchase_price * 100
+    # difference / purchase_price >= 5 / 100 を、浮動小数点を使わず比較する。
+    meets_minimum_rate = (
+        difference * 100 >= purchase_price * MIN_PROFIT_RATE_PERCENT
+    )
+    if difference < 0:
         reason = f"赤字見込み {abs(difference):,}円のため除外"
         should_fill = False
+    elif not meets_minimum_rate:
+        reason = (
+            f"粗利益率 {profit_rate_percent:.4f}%で"
+            f"基準の{MIN_PROFIT_RATE_PERCENT}%未満のため除外"
+        )
+        should_fill = False
     else:
-        reason = f"差額 {difference:+,}円のため入力対象"
+        reason = (
+            f"粗利益率 {profit_rate_percent:.2f}% / "
+            f"差額 {difference:+,}円のため入力対象"
+        )
         should_fill = True
     return PriceDecision(
-        case.model_name,
-        purchase_price,
-        buyback_price,
-        difference,
-        should_fill,
-        reason,
-        case.form_url,
-        quote_url,
+        model_name=case.model_name,
+        purchase_price_yen=purchase_price,
+        buyback_price_yen=buyback_price,
+        gross_difference_yen=difference,
+        profit_rate_percent=profit_rate_percent,
+        should_fill=should_fill,
+        reason=reason,
+        form_url=case.form_url,
+        quote_url=quote_url,
     )
 
 
@@ -506,6 +537,7 @@ def main() -> int:
                 purchase_price_yen=decision.purchase_price_yen,
                 buyback_price_yen=decision.buyback_price_yen,
                 gross_difference_yen=decision.gross_difference_yen,
+                profit_rate_percent=decision.profit_rate_percent,
                 should_fill=decision.should_fill,
                 reason=decision.reason,
                 quote_url=decision.quote_url,

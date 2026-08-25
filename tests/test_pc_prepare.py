@@ -39,11 +39,28 @@ def test_purchase_price_higher_than_buyback_is_skipped() -> None:
     assert decision.gross_difference_yen == -11_800
 
 
-def test_equal_price_is_included_as_requested() -> None:
+def test_equal_price_is_skipped_because_profit_rate_is_zero() -> None:
     decision = decide_price(make_case(), make_quote(211_800))
 
-    assert decision.should_fill is True
+    assert decision.should_fill is False
     assert decision.gross_difference_yen == 0
+    assert decision.profit_rate_percent == 0
+
+
+def test_exactly_five_percent_is_included() -> None:
+    decision = decide_price(make_case(price_yen=200_000), make_quote(210_000))
+
+    assert decision.should_fill is True
+    assert decision.profit_rate_percent == 5
+
+
+def test_just_under_five_percent_is_skipped_without_rounding_up() -> None:
+    decision = decide_price(make_case(price_yen=200_000), make_quote(209_999))
+
+    assert decision.should_fill is False
+    assert decision.gross_difference_yen == 9_999
+    assert decision.profit_rate_percent is not None
+    assert decision.profit_rate_percent < 5
 
 
 def test_missing_buyback_price_fails_closed() -> None:
@@ -62,6 +79,7 @@ def test_purchase_price_override_is_used() -> None:
 
     assert decision.should_fill is True
     assert decision.purchase_price_yen == 200_000
+    assert decision.profit_rate_percent == 5
 
 
 def test_only_current_form_is_open() -> None:
