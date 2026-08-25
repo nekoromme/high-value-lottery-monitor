@@ -20,9 +20,15 @@ test = [
   "pytest>=8.3,<9",
   "responses>=0.25,<1",
 ]
+pc = [
+  "playwright>=1.50,<2",
+  # WindowsはIANAタイムゾーン情報を標準搭載しないため、Asia/Tokyo用に同梱する。
+  "tzdata>=2025.2",
+]
 
 [project.scripts]
 lottery-monitor = "high_value_lottery_monitor.cli:main"
+ricoh-entry-assistant = "high_value_lottery_monitor.pc_prepare:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -31,4 +37,3 @@ where = ["src"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
-

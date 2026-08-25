@@ -1,0 +1,67 @@
+name: Build Windows PC tool
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "pc_launcher.py"
+      - "PC_README.txt"
+      - "PC_RECONFIGURE.bat"
+      - ".github/workflows/build-pc-tool.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: プログラムを取得
+        uses: actions/checkout@v4
+
+      - name: Pythonを準備
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: テスト・Windows化部品を導入
+        run: python -m pip install --upgrade pip ".[test,pc]" pyinstaller
+
+      - name: 自動テスト
+        run: python -m pytest
+
+      - name: Windows版を作成
+        shell: pwsh
+        run: |
+          pyinstaller `
+            --noconfirm `
+            --clean `
+            --onedir `
+            --console `
+            --name RICOH_Entry_Assistant `
+            --collect-all playwright `
+            pc_launcher.py
+          Copy-Item PC_README.txt dist/RICOH_Entry_Assistant/PC_README.txt
+          Copy-Item PC_RECONFIGURE.bat dist/RICOH_Entry_Assistant/PC_RECONFIGURE.bat
+
+      - name: Windows版の起動部品を検査
+        shell: pwsh
+        run: |
+          & dist/RICOH_Entry_Assistant/RICOH_Entry_Assistant.exe --self-test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: ダウンロード用ZIPを保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: RICOH_PC_Tool
+          path: dist/RICOH_Entry_Assistant/
+          if-no-files-found: error
+          retention-days: 90

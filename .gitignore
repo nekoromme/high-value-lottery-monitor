@@ -8,4 +8,7 @@ logs/*.jsonl
 *.egg-info/
 dist/
 build/
-
+pc_config.json
+pc_logs/
+pc_browser_profile/
+*.spec
