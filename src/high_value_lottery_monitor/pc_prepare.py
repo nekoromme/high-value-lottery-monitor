@@ -446,6 +446,12 @@ def open_and_fill_forms(
 
 
 def main() -> int:
+    # Windowsの英語環境など、コンソールが日本語を表現できない場合でも
+    # 起動そのものは止めない。日本語Windowsでは通常どおり表示される。
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
     args = _parser().parse_args()
     if args.self_test:
         assert len(MODEL_JANS) == 6
