@@ -1,0 +1,42 @@
+name: RICOH monitor automatic recovery
+
+on:
+  schedule:
+    # 本体（毎時17分）とずらし、予約が欠けた時だけ補う。
+    - cron: "47 * * * *"
+  # この復旧役を変更したpushでも動かし、導入直後から停止を直せるようにする。
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/monitor-recovery.yml"
+      - "src/high_value_lottery_monitor/workflow_recovery.py"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: high-value-lottery-monitor-recovery
+  cancel-in-progress: true
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PYTHONPATH: src
+
+    steps:
+      - name: 自動復旧プログラムを取得
+        uses: actions/checkout@v4
+
+      - name: 本体が止まっていれば再起動
+        run: |
+          python3 -m high_value_lottery_monitor.workflow_recovery \
+            --workflow monitor.yml \
+            --ref main \
+            --max-age-minutes 90 \
+            --active-grace-minutes 30

@@ -84,7 +84,12 @@ Google Calendarを使う場合は、対象カレンダーをサービスアカ�
 
 リポジトリの `Actions` → `RICOH lottery monitor` → `Run workflow` で、`auto` のまま実行します。
 
-初回結果に `"mode": "baseline(auto)"` と出れば正常です。この回は誤通知防止のためDiscord通知もCalendar登録もしません。以後は日本時間の毎時17分ごろに自動実行されます。GitHub Actionsは混雑時に数分遅れる場合があります。
+初回結果に `"mode": "baseline(auto)"` と出れば正常です。この回は誤通知防止のためDiscord通知もCalendar登録もしません。以後は日本時間の毎時17分ごろに自動実行されます。
+
+GitHub Actionsの予約実行は、混雑時に遅れたり、まれに起動自体が抜けたりします。
+その対策として `RICOH monitor automatic recovery` が毎時47分に本体の履歴を
+確認します。最後の正常終了から90分を超え、現在実行中でもない場合だけ本体を
+自動で再起動します。通常時は履歴を確認するだけなので、監視を二重起動しません。
 
 ## 手動実行モード
 
