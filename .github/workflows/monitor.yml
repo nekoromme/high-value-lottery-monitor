@@ -2,8 +2,8 @@ name: RICOH lottery monitor
 
 on:
   schedule:
-    # UTCの毎時17分 = 日本時間でも毎時17分。正時のActions混雑を避ける。
-    - cron: "17 * * * *"
+    # UTC 0・6・12・18時17分 = 日本時間 3・9・15・21時17分。正時のActions混雑を避ける。
+    - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       mode:
