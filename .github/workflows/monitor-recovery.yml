@@ -2,9 +2,9 @@ name: RICOH monitor automatic recovery
 
 on:
   schedule:
-    # 本体の各予定時刻から90分後に確認し、予約が欠けた時だけ補う。
-    # UTC 1・7・13・19時47分 = 日本時間 4・10・16・22時47分。
-    - cron: "47 1,7,13,19 * * *"
+    # GitHubのscheduleは数時間遅れることがあるため、軽い復旧確認だけは毎時行う。
+    # RICOHサイトへアクセスする本体は、最後の成功から7時間30分以内なら起動しない。
+    - cron: "47 * * * *"
   # この復旧役を変更したpushでも動かし、導入直後から停止を直せるようにする。
   push:
     branches:
@@ -39,5 +39,5 @@ jobs:
           python3 -m high_value_lottery_monitor.workflow_recovery \
             --workflow monitor.yml \
             --ref main \
-            --max-age-minutes 90 \
+            --max-age-minutes 450 \
             --active-grace-minutes 30

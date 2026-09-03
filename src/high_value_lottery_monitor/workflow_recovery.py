@@ -215,7 +215,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-age-minutes",
         type=int,
-        default=90,
+        default=450,
         help="最後の成功から何分で自動復旧するか",
     )
     parser.add_argument(

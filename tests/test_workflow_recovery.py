@@ -35,19 +35,19 @@ class RecoveryDecisionTests(unittest.TestCase):
         return decide_recovery(
             runs,
             now=NOW,
-            max_success_age_minutes=90,
+            max_success_age_minutes=450,
             active_grace_minutes=30,
         )
 
     def test_recent_success_needs_no_recovery(self) -> None:
-        decision = self.decide([run(minutes_ago=45)])
+        decision = self.decide([run(minutes_ago=449)])
         self.assertFalse(decision.should_dispatch)
-        self.assertIn("45分", decision.reason)
+        self.assertIn("449分", decision.reason)
 
     def test_old_success_is_restarted(self) -> None:
-        decision = self.decide([run(minutes_ago=91)])
+        decision = self.decide([run(minutes_ago=451)])
         self.assertTrue(decision.should_dispatch)
-        self.assertIn("91分", decision.reason)
+        self.assertIn("451分", decision.reason)
 
     def test_fresh_active_run_prevents_duplicate_dispatch(self) -> None:
         decision = self.decide(
@@ -58,7 +58,7 @@ class RecoveryDecisionTests(unittest.TestCase):
                     conclusion=None,
                     run_id=2,
                 ),
-                run(minutes_ago=120),
+                run(minutes_ago=500),
             ]
         )
         self.assertFalse(decision.should_dispatch)
@@ -73,7 +73,7 @@ class RecoveryDecisionTests(unittest.TestCase):
                     conclusion=None,
                     run_id=2,
                 ),
-                run(minutes_ago=120),
+                run(minutes_ago=500),
             ]
         )
         self.assertTrue(decision.should_dispatch)
