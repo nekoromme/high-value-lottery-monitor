@@ -2,6 +2,40 @@
   "armed": true,
   "baseline_at": "2026-08-24T13:25:37.560252+09:00",
   "cases": {
+    "17c570d1b814c26ab95e2fde3cf5949ee07644d627f6b59ab9a6986fae4d29ff": {
+      "calendar_event_id": "ricoh17c570d1b814c26ab95e2fde3cf5949e",
+      "discord_message_id": "1552729809916928182",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/EfLVognRVZk84zNq5",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IV HDF",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 222000,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001566&cat=002010",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
+    },
+    "2bd2ff2f4c3deddb244e6127e66ba4f856b9092e43122ff8e835aaadcd92c4fc": {
+      "calendar_event_id": "ricoh2bd2ff2f4c3deddb244e6127e66ba4f8",
+      "discord_message_id": "1552729813834268704",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/U9mM9SXMxFA3VCro6",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IV Monochrome",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 299800,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001580&cat=002010",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
+    },
     "683163ce4f13dc7fcc63e9a592bc2b0b22ddcd2a85e585324baefb6d91198d6b": {
       "calendar_event_id": "ricoh683163ce4f13dc7fcc63e9a592bc2b0b",
       "ends_at": "2026-08-26T12:00:00+09:00",
@@ -17,6 +51,57 @@
       "schedule_notified": true,
       "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
       "starts_at": "2026-08-24T12:00:00+09:00"
+    },
+    "911c7fc7a75e23cf793e52dbbde5e4c8a94eb37b65799ea954195ae75a05e83e": {
+      "calendar_event_id": "ricoh911c7fc7a75e23cf793e52dbbde5e4c8",
+      "discord_message_id": "1552729803805827113",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/ZB8TKg1ie1XZWgw7A",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IIIx Urban Edition",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 163200,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001156",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
+    },
+    "973f66ec994d2471c55aef08da6daff02612c53d1ede117bdea4f2c57c0b74e4": {
+      "calendar_event_id": "ricoh973f66ec994d2471c55aef08da6daff0",
+      "discord_message_id": "1552729800127545365",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/FzxVYX5MbtaNdnnw5",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IIIx HDF",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 168800,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001281",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
+    },
+    "a41b3dc6042cbe96427563a415382deb77c0b27ba00be3f832dd2a05f0f6404f": {
+      "calendar_event_id": "ricoha41b3dc6042cbe96427563a415382deb",
+      "discord_message_id": "1552729795673202821",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/dQdH9q12N2a8Cqax9",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IIIx",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 155400,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0015284",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
     },
     "b7a8a5023356d2e83511d4a99089bfbdde8e606bfbc6b8996b088ea5eb9de0ad": {
       "calendar_event_id": "ricohb7a8a5023356d2e83511d4a99089bfbd",
@@ -73,7 +158,7 @@
       "first_seen_at": "2026-09-17T20:44:45.704957+09:00",
       "form_notified": false,
       "form_url": null,
-      "last_seen_at": "2026-09-24T20:49:05.015341+09:00",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
       "model_name": "RICOH GR IV 30th Anniversary Edition Kit",
       "period_text": "2026年9月18日(金)正午~9月24日(木)午後11時59分",
       "price_yen": 259800,
@@ -99,6 +184,23 @@
       "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
       "starts_at": "2026-08-24T12:00:00+09:00"
     },
+    "eb4474d179539c959f967039b2bfd703fc934feab8f8687aa6fd48b9bd0deab4": {
+      "calendar_event_id": "ricoheb4474d179539c959f967039b2bfd703",
+      "discord_message_id": "1552729806960070827",
+      "ends_at": "2026-09-28T12:00:00+09:00",
+      "first_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "form_notified": true,
+      "form_url": "https://forms.gle/8YV8t5QVXD4sdKSX9",
+      "last_seen_at": "2026-09-25T02:13:45.521065+09:00",
+      "model_name": "RICOH GR IV",
+      "period_text": "2026年9月25日(金)正午~9月28日(月)正午",
+      "price_yen": 211800,
+      "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001551&cat=002010",
+      "provider": "ricoh_online_store",
+      "schedule_notified": true,
+      "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+      "starts_at": "2026-09-25T12:00:00+09:00"
+    },
     "fc15ba6d9b7b54907e082f5f2f439323aee1b61ccc311db403f1d872255cb9cb": {
       "calendar_event_id": "ricohfc15ba6d9b7b54907e082f5f2f439323",
       "ends_at": "2026-08-26T12:00:00+09:00",
@@ -116,55 +218,55 @@
       "starts_at": "2026-08-24T12:00:00+09:00"
     }
   },
-  "last_success_at": "2026-09-24T20:49:05.015341+09:00",
+  "last_success_at": "2026-09-25T02:13:45.521065+09:00",
   "source_health": {
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001156": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001281": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001522&cat=002010": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001551&cat=002010": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001566&cat=002010": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001580&cat=002010": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0015284": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     },
     "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx": {
       "alert_sent": false,
       "consecutive_failures": 0,
       "last_error": null,
-      "last_success_at": "2026-09-24T20:49:05.015341+09:00"
+      "last_success_at": "2026-09-25T02:13:45.521065+09:00"
     }
   },
   "version": 1
