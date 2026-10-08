@@ -10,6 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from high_value_lottery_monitor.models import LotteryCase
+from high_value_lottery_monitor.privacy import redact_diagnostics
 from high_value_lottery_monitor.providers.ricoh import (
     SCHEDULE_URL,
     FetchDiagnostic,
@@ -37,7 +38,8 @@ class RunSummary:
     errors: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
-        return {
+        # 標準出力はteeで成果物にも保存される。画面側のマスクに頼らない。
+        return redact_diagnostics({
             "mode": self.mode,
             "detected_cases": self.detected_cases,
             "new_cases": self.new_cases,
@@ -45,7 +47,7 @@ class RunSummary:
             "form_notifications": self.form_notifications,
             "calendar_updates": self.calendar_updates,
             "errors": self.errors,
-        }
+        })
 
 
 class JsonlAuditLog:
@@ -62,7 +64,12 @@ class JsonlAuditLog:
             **details,
         }
         with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+            # GitHubのSecretマスクは、アップロードするファイルの中身まで
+            # 書き換えてくれない。保存前のこの境界でも必ず伏せる。
+            handle.write(
+                json.dumps(redact_diagnostics(record), ensure_ascii=False, sort_keys=True)
+                + "\n"
+            )
 
 
 def _update_health(
