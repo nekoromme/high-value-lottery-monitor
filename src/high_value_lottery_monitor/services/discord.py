@@ -12,6 +12,10 @@ from high_value_lottery_monitor.models import LotteryCase
 JST = ZoneInfo("Asia/Tokyo")
 
 
+class DiscordDeliveryError(RuntimeError):
+    """秘密URLを含まない、再試行のための通知失敗情報。"""
+
+
 def _format_datetime(value: datetime | None) -> str:
     if value is None:
         return "公式ページから時刻を取得できず"
@@ -41,16 +45,26 @@ class DiscordNotifier:
     def _post(self, payload: dict) -> str | None:
         if not self.webhook_url:
             return None
-        response = requests.post(
-            self.webhook_url,
-            params={"wait": "true"},
-            json=payload,
-            timeout=self.timeout_seconds,
-        )
-        response.raise_for_status()
-        if response.content:
-            return str(response.json().get("id") or "") or None
-        return None
+        response = None
+        try:
+            response = requests.post(
+                self.webhook_url,
+                params={"wait": "true"},
+                json=payload,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+            if response.content:
+                return str(response.json().get("id") or "") or None
+            return None
+        except (requests.RequestException, ValueError) as exc:
+            # requestsの例外文・応答本文には投稿用URLが混ざり得る。
+            # 原文は渡さず、障害の種類とHTTP状態だけ残す。通常通知だけでなく
+            # 復旧・異常通知もこの関数を通るので、同じ対策が適用される。
+            status = f" / HTTP {response.status_code}" if response is not None else ""
+            raise DiscordDeliveryError(
+                f"Discord通知に失敗しました ({type(exc).__name__}{status})"
+            ) from None
 
     def send_case(self, case: LotteryCase, *, opened: bool, detected_at: datetime) -> str | None:
         """日程公開または応募フォーム公開を通知する。"""
