@@ -1,0 +1,35 @@
+[
+  {
+    "provider": "ricoh_online_store",
+    "model_name": "RICOH GR IV",
+    "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001551&cat=002010",
+    "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+    "form_url": "https://forms.gle/fdSsfuRrwGrX9LRT7",
+    "period_text": "2026年10月28日(水)正午~10月30日(金)正午",
+    "starts_at": "2026-10-28T12:00:00+09:00",
+    "ends_at": "2026-10-30T12:00:00+09:00",
+    "price_yen": 211800
+  },
+  {
+    "provider": "ricoh_online_store",
+    "model_name": "RICOH GR IV HDF",
+    "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001566&cat=002010",
+    "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+    "form_url": "https://forms.gle/qog22DHDrAzddpoPA",
+    "period_text": "2026年10月28日(水)正午~10月30日(金)正午",
+    "starts_at": "2026-10-28T12:00:00+09:00",
+    "ends_at": "2026-10-30T12:00:00+09:00",
+    "price_yen": 222000
+  },
+  {
+    "provider": "ricoh_online_store",
+    "model_name": "RICOH GR IIIx HDF",
+    "product_url": "https://ricohimagingstore.com/Form/Product/ProductDetail.aspx?shop=0&pid=S0001281",
+    "source_url": "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx",
+    "form_url": "https://forms.gle/reSKpnJGmogqgK1a8",
+    "period_text": "2026年10月28日(水)正午~10月30日(金)正午",
+    "starts_at": "2026-10-28T12:00:00+09:00",
+    "ends_at": "2026-10-30T12:00:00+09:00",
+    "price_yen": 168800
+  }
+]

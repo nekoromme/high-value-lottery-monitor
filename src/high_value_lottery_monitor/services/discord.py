@@ -10,6 +10,8 @@ import requests
 from high_value_lottery_monitor.models import LotteryCase
 
 JST = ZoneInfo("Asia/Tokyo")
+# 現在の対象は6機種。将来増えてもDiscordのフィールド数・文字数上限に余裕を残す。
+MAX_CASES_PER_MESSAGE = 10
 
 
 class DiscordDeliveryError(RuntimeError):
@@ -117,6 +119,59 @@ class DiscordNotifier:
             }
         )
 
+    def send_cases(
+        self, cases: list[LotteryCase], *, opened: bool, detected_at: datetime
+    ) -> str | None:
+        """同じ受付期間・公開段階の複数機種を、1投稿・1枚にまとめる。"""
+
+        if not cases or len(cases) > MAX_CASES_PER_MESSAGE:
+            raise ValueError("通知の機種数が範囲外です")
+        first = cases[0]
+        if any(
+            (case.provider, case.starts_at, case.ends_at)
+            != (first.provider, first.starts_at, first.ends_at)
+            for case in cases
+        ):
+            raise ValueError("受付期間・監視元が異なる抽選はまとめられません")
+
+        fields = [{
+            "name": "受付期間（共通）",
+            "value": f"{_format_datetime(first.starts_at)} ～ {_format_datetime(first.ends_at)}",
+            "inline": False,
+        }]
+        for case in cases:
+            links = [f"[公式商品ページ]({case.product_url})"]
+            if opened:
+                if not case.form_url:
+                    raise ValueError("応募フォーム公開通知には応募URLが必要です")
+                links.insert(0, f"[応募フォームを開く]({case.form_url})")
+            fields.append({
+                "name": case.model_name,
+                "value": f"表示価格：{_format_price(case.price_yen)}\n" + " ｜ ".join(links),
+                "inline": False,
+            })
+        fields.append({
+            "name": "検出日時",
+            "value": detected_at.astimezone(JST).strftime("%Y/%m/%d %H:%M:%S"),
+            "inline": False,
+        })
+        return self._post({
+            "username": "高額抽選監視",
+            "embeds": [{
+                "title": (
+                    f"📷 RICOH抽選の応募フォームが公開（{len(cases)}機種）"
+                    if opened else f"🗓️ RICOH抽選の日程を検知（{len(cases)}機種）"
+                ),
+                "description": (
+                    "同じ受付期間の抽選をまとめています。各機種のリンクから応募できます。"
+                    if opened else "応募フォームは受付開始時刻に商品ページへ公開されます。"
+                ),
+                "color": 0x2ECC71 if opened else 0xF1C40F,
+                "fields": fields,
+                "footer": {"text": "RICOH公式オンラインストア監視"},
+            }],
+        })
+
     def send_health_alert(self, source: str, failures: int, detail: str) -> str | None:
         """連続失敗が規定回数に達したときだけ異常通知する。"""
 
@@ -151,4 +206,5 @@ class DiscordNotifier:
                 ],
             }
         )
+
 
