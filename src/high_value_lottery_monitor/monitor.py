@@ -17,7 +17,7 @@ from high_value_lottery_monitor.providers.ricoh import (
     RicohOnlineStoreProvider,
 )
 from high_value_lottery_monitor.services.calendar import GoogleCalendarWriter
-from high_value_lottery_monitor.services.discord import DiscordNotifier
+from high_value_lottery_monitor.services.discord import MAX_CASES_PER_MESSAGE, DiscordNotifier
 from high_value_lottery_monitor.state import save_state
 
 LOGGER = logging.getLogger(__name__)
@@ -264,6 +264,8 @@ def run_monitor(
         audit.write("baseline_complete", cases=len(cases))
         return summary
 
+    # 先に候補を集め、機種別のIDと履歴は変えずに送信だけをまとめる。
+    pending: dict[tuple, dict[str, LotteryCase]] = {}
     for case in cases:
         record = state["cases"].get(case.case_id)
         is_new = record is None
@@ -303,33 +305,60 @@ def run_monitor(
                 audit.write("calendar_error", case_id=case.case_id, error=repr(exc))
 
         if case.form_url and not record.get("form_notified"):
-            try:
-                message_id = notifier.send_case(case, opened=True, detected_at=now)
-                # Webhookが未設定なら通知済みにしない。設定後に現在の受付を拾える。
-                if notifier.enabled:
-                    record["form_notified"] = True
-                    record["schedule_notified"] = True
-                    record["discord_message_id"] = message_id
-                    summary.form_notifications += 1
-                audit.write("form_detected", case_id=case.case_id, notified=notifier.enabled)
-            # Webhookの通信・JSON応答など通知経路の例外をまとめて次回再試行する。
-            except Exception as exc:  # noqa: BLE001
-                summary.errors.append(f"Discord: {case.model_name}: {exc!r}")
-                audit.write("discord_error", case_id=case.case_id, error=repr(exc))
+            opened = True
         elif not record.get("schedule_notified"):
+            opened = False
+        else:
+            continue
+
+        # 同じ巡回・監視元・受付期間・公開段階だけをまとめる。
+        # 日時が不明なら、別の抽選を誤って混ぜないよう個別のままにする。
+        key = (
+            case.provider, opened, case.starts_at, case.ends_at,
+            case.case_id if case.starts_at is None or case.ends_at is None else None,
+        )
+        pending.setdefault(key, {})[case.case_id] = case
+
+    for key, group in pending.items():
+        opened = key[1]
+        grouped_cases = list(group.values())
+        for offset in range(0, len(grouped_cases), MAX_CASES_PER_MESSAGE):
+            batch = grouped_cases[offset:offset + MAX_CASES_PER_MESSAGE]
+            case_ids = [case.case_id for case in batch]
             try:
-                message_id = notifier.send_case(case, opened=False, detected_at=now)
-                if notifier.enabled:
-                    record["schedule_notified"] = True
-                    record["discord_message_id"] = message_id
-                    summary.schedule_notifications += 1
-                audit.write("schedule_detected", case_id=case.case_id, notified=notifier.enabled)
-            # Webhookの通信・JSON応答など通知経路の例外をまとめて次回再試行する。
+                if len(batch) == 1:
+                    message_id = notifier.send_case(batch[0], opened=opened, detected_at=now)
+                else:
+                    message_id = notifier.send_cases(batch, opened=opened, detected_at=now)
+                # 成功後だけ機種別に既知化する。失敗・Webhook未設定なら次回再試行。
+                # 従来の履歴を読むので、更新による全件再通知も起こさない。
+                for case in batch:
+                    record = state["cases"][case.case_id]
+                    if notifier.enabled:
+                        record["schedule_notified"] = True
+                        if opened:
+                            record["form_notified"] = True
+                            summary.form_notifications += 1
+                        else:
+                            summary.schedule_notifications += 1
+                        record["discord_message_id"] = message_id
+                    audit.write(
+                        "form_detected" if opened else "schedule_detected",
+                        case_id=case.case_id, notified=notifier.enabled,
+                    )
+                audit.write(
+                    "discord_group_complete", case_ids=case_ids,
+                    opened=opened, notified=notifier.enabled, message_id=message_id,
+                )
+                # 別グループで失敗しても、成功済みの送信履歴を残す。
+                save_state(state_path, state)
             except Exception as exc:  # noqa: BLE001
-                summary.errors.append(f"Discord: {case.model_name}: {exc!r}")
-                audit.write("discord_error", case_id=case.case_id, error=repr(exc))
+                names = ", ".join(case.model_name for case in batch)
+                summary.errors.append(f"Discord: {names}: {exc!r}")
+                audit.write("discord_error", case_ids=case_ids, error=repr(exc))
 
     state["last_success_at"] = now.isoformat()
     save_state(state_path, state)
     audit.write("run_complete", **summary.as_dict())
     return summary
+
