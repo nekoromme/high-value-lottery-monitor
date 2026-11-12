@@ -381,8 +381,9 @@
     },
     "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx": {
       "alert_sent": false,
-      "consecutive_failures": 0,
-      "last_error": null,
+      "consecutive_failures": 1,
+      "last_error": "RuntimeError(\"RICOHスケジュール取得失敗: HTTPSConnectionPool(host='ricohimagingstore.com', port=443): Max retries exceeded with url: /Page/Feature/FeaturePage009.aspx (Caused by ResponseError('too many 503 error responses'))\")",
+      "last_failure_at": "2026-11-13T02:45:21.007845+09:00",
       "last_success_at": "2026-11-12T16:14:09.128451+09:00"
     }
   },
