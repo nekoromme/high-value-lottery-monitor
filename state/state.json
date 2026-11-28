@@ -488,9 +488,9 @@
     },
     "https://ricohimagingstore.com/Page/Feature/FeaturePage009.aspx": {
       "alert_sent": false,
-      "consecutive_failures": 0,
-      "last_error": null,
-      "last_failure_at": "2026-11-17T07:32:02.764646+09:00",
+      "consecutive_failures": 1,
+      "last_error": "RuntimeError(\"RICOHスケジュール取得失敗: HTTPSConnectionPool(host='ricohimagingstore.com', port=443): Max retries exceeded with url: /Page/Feature/FeaturePage009.aspx (Caused by ConnectTimeoutError(<HTTPSConnection(host='ricohimagingstore.com', port=443) at 0x7a6a9e869f10>, 'Connection to ricohimagingstore.com timed out. (connect timeout=30)'))\")",
+      "last_failure_at": "2026-11-28T16:52:40.405996+09:00",
       "last_success_at": "2026-11-28T13:58:34.352213+09:00"
     }
   },
